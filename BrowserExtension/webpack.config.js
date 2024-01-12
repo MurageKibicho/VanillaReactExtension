@@ -3,8 +3,12 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = {
+    devtool: "cheap-module-source-map",
     entry: {
-        popup : './frontend/popup.jsx'
+        popup :path.resolve("./frontend/Pages/PopupPage/popup.jsx"),
+        options:path.resolve("./frontend/Pages/OptionsPage/options.jsx"),
+        background:path.resolve("./frontend/Background/background.js")
+
       },
       mode: 'development',
       output: {
@@ -12,10 +16,18 @@ module.exports = {
         filename: '[name].js',
         publicPath: '/'
       },
+      optimization: {
+        splitChunks:{
+          chunks : 'all'
+        }
+      },
       performance: {
         hints: false,
         maxEntrypointSize: 512000,
         maxAssetSize: 512000
+    },
+    resolve: {
+      extensions: ['.js', '.jsx', '.json'],
     },
       module: {
         rules: [
@@ -31,14 +43,23 @@ module.exports = {
           }]
       },
       plugins: [
-        new HtmlWebpackPlugin({
-            template : './frontend/popup.html',
-            filename:"popup.html"
-        }),
+        ...GetHTMLPlugins([
+            'popup',
+            'options'
+        ]),
         new CopyWebpackPlugin({
             patterns: [
-                {from : "public"}
+                {from : path.resolve('public'), to: path.resolve('dist')}
             ]
         })
       ],
+}
+
+function GetHTMLPlugins(chunks)
+{
+    return chunks.map(chunk => new HtmlWebpackPlugin({
+        title: 'React Extension',
+        filename : `${chunk}.html`,
+        chunks:[chunk]
+    }))
 }
